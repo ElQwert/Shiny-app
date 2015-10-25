@@ -1,18 +1,16 @@
 # Home dir
 main.dir <- "G:/_R/Image Classification/shiny"
 
-# Data SubDir
-data.dir <- "data"
+Results <- reactive({
+        results.file <- "Results.RData"
+        Results <- readRDS("Results.RData")
+})
 
-# Results file name
-results.file <- "Results.RData"
+Perf <- reactive({
+        perf.file <- "Perf.RData"
+        Perf <- readRDS("Perf.RData")
+})
 
-# Model performance file name
-perf.file <- "Perf.RData"
-
-# Load data
-Results <- readRDS("Results.RData")
-Perf <- readRDS("Perf.RData")
 
 library(shiny)
 library(ggplot2)
@@ -20,16 +18,16 @@ library(dplyr)
 
 shinyServer(
         function(input, output) {
-                output$Accuracy <- renderPrint({round(Results$accuracy.test[input$itr], 4)})
-                output$TP <- renderPrint({Results$TP[input$itr]})
-                output$FP <- renderPrint({Results$FP[input$itr]})
-                output$FN <- renderPrint({Results$FN[input$itr]})
-                output$TN <- renderPrint({Results$TN[input$itr]})
-                output$Precision <- renderPrint({round(Results$precision[input$itr], 4)})
-                output$Recall <- renderPrint({round(Results$recall[input$itr], 4)})
-                output$F1 <- renderPrint({round(Results$F1[input$itr], 4)})
+                output$Accuracy <- renderPrint({round(Results()$accuracy.test[input$itr], 4)})
+                output$TP <- renderPrint({Results()$TP[input$itr]})
+                output$FP <- renderPrint({Results()$FP[input$itr]})
+                output$FN <- renderPrint({Results()$FN[input$itr]})
+                output$TN <- renderPrint({Results()$TN[input$itr]})
+                output$Precision <- renderPrint({round(Results()$precision[input$itr], 4)})
+                output$Recall <- renderPrint({round(Results()$recall[input$itr], 4)})
+                output$F1 <- renderPrint({round(Results()$F1[input$itr], 4)})
                 output$learn_curves <- renderPlot({
-                        g <- ggplot(Results, aes(x=N))
+                        g <- ggplot(Results(), aes(x=N))
                         g <- g + geom_line(aes(y=accuracy.test), size = 0.5, color = "blue")
                         g <- g + geom_line(aes(y=accuracy.train), size = 0.5, color = "blue")
                         g <- g + geom_smooth(aes(y=accuracy.test), size = 1, method = "lm",  color = "blue")
@@ -46,7 +44,7 @@ shinyServer(
                         g
                 })
                 output$prob <- renderPlot({
-                        g <- ggplot(filter(Perf, iter == input$itr), aes(x = as.factor(img.num), y = Diff))
+                        g <- ggplot(filter(Perf(), iter == input$itr), aes(x = as.factor(img.num), y = Diff))
                         g <- g + geom_bar(aes(fill = Type), stat = 'identity', colour = 'black')
                         g <- g + scale_fill_manual(values=c("maroon", "red", "green", "lightgreen"))
                         g <- g + scale_y_sqrt()
@@ -59,6 +57,6 @@ shinyServer(
                         g <- g + ggtitle("Show image difference")
                         g
                 })
-                output$Table <- renderTable({filter(Perf, iter == input$itr)})
+                output$Table <- renderTable({filter(Perf(), iter == input$itr)})
         }
 )
